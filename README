@@ -3,28 +3,57 @@
    / _|_ __ ___  ___| |__     Programmrahmen
   | |_| '__/ _ \/ __| '_ \       "Shell Programmierung"
   |  _| | |  __/\__ \ | | |
-  |_| |_|  \___||___/_| |_|
+  |_| |_|  \___||___/_| |_|      Kapitel 2.
 
 Aufgabenstellung:
 -----------------
- Lesen und verstehen Sie den Programmrahmen. Welche Quellcode Dateien
- erfüllen welche Aufgaben? Die Kommentare werden Ihnen dabei helfen.
 
- Implementieren Sie die Funktion do_fork_wait in fresh.c, sodass Ihre
- shell einfache Programmaufrufe ausführen kann. Verwenden Sie dabei die
- Funktionen fork, und wait, sowie eine geeignete Funktion der exec
- Familie. Die Manual-Seiten zu den Funktionen werden Ihnen weiterhelfen.
+ Die fresh shell wurde um die Fähigkeit erweitert, das Pipe Symbol ('|'), sowie
+ Umleitungs Operatoren ('>', '<', '>>') in ihrer einfachsten Form zu erkennen
+ und zu verstehen.  Dazu wird ihnen eine reduzierte Teilmenge der shell
+ Grammatik als lex/yacc Parser zur Verfügung gestellt, welcher in der Lage ist,
+ die Eingabe der Kommandozeile in separate Kommandos zu zerlegen.
 
- Implementieren Sie die Funktionen builtin_cd sowie builtin_exit in
- builtin.c, sodass Ihre shell in der Lage ist, das aktuelle Verzeichnis zu
- wecheln, sowie sich zu beenden. Wieso müssen beide dieser Funktionen als
- builtins implementiert werden, und können nicht als Programme mit dem
- fork/exec Mechanismus aufgerufen werden?
+ Ihre Aufgabe ist es, in src/dispatcher.c mit den Systemaufrufen pipe(), dup(),
+ dup2() und close() die File Deskriptoren zu organisieren, damit sie zum Einen
+ in der Pipeline der Kommandos die Ausgaben korrekt weiterleiten, und zum
+ Anderen die Ein- und Ausgabeumleitung in Dateien korrekt behandeln. Halten Sie
+ Ausschau nach TODO Kommentaren im Code.
 
- Welche weiteren shell builtins kennen Sie? Was fehlt sonst noch zu einer
- "echten", vollständigen shell? Lesen Sie dazu auch die Manual-Seite ihrer
- shell, z.B. bash oder zsh, sowie die entsprechenden Teile der POSIX
- Spezifikation, z.B. hier:
+ Denken Sie daran, dass jeder Prozess per Konvention die folgenden Standard
+ File Deskriptoren erwartet:
+
+  0 - Standardeingabe
+  1 - Standardausgabe
+  2 - Standardfehlerausgabe
+
+ Die Standardausgabe "umzuleiten" würde in diesem Zusammenhang bedeuten, den
+ File Deskriptor mit der Nummer 1 zu ersetzen mit dem schreibenden Ende einer
+ Pipe, oder einer zum schreiben geöffneten Datei. Konsultieren Sie die
+ Manual-Seite des Funktionsaufrufes dup2() für Hinweise.
+
+ Die genannten Umleitungs Operatoren haben folgende Semantik:
+
+  COMMAND '<' FILE
+
+    FILE wird zum lesen geöffnet, und COMMAND als Standardeingabe (0) bereit
+    gestellt
+
+  COMMAND '>' FILE
+
+    FILE wird erstellt, falls es nicht existiert, mit den Zugriffsrechten 0666
+    (oktal), abzüglich der umask. FILE wird daraufhin zum schreiben geöffnet und
+    geleert (truncate), und COMMAND als Standardausgabe (1) bereit gestellt.
+
+  COMMAND '>>' FILE
+
+    FILE wird erstellt, falls es nicht existiert, mit den Zugriffsrechten 0666
+    (oktal), abzüglich der umask. FILE wird daraufhin zum schreiben geöffnet und
+    der Schreib-Lese Zeiger wird am Ende der Datei platziert, dann wird sie
+    COMMAND als Standardausgabe (1) bereit gestellt.
+
+ Übernehmen Sie den Code für Ihre Builtins aus dem vorherigen Programmrahmen.
+
+ Wie schon beim letzten mal finden Sie weitere Informationen unter der URL:
 
  https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html
-

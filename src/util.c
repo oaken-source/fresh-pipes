@@ -26,4 +26,3 @@ debug (const char *format, ...)
 
   return res;
 }
-
