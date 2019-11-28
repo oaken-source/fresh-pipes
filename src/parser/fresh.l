@@ -31,7 +31,7 @@ parse (char *str, struct sh_program *p)
 >>        return DGREAT;
 \|        return PIPE;
 
-[a-zA-Z0-9_.,-]+  { yylval.str = strdup(yytext); return TOKEN; }
+[a-zA-Z0-9_/.,-]+  { yylval.str = strdup(yytext); return TOKEN; }
 
 [ \t]
 

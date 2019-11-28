@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include <stdio.h>
 
-static void
+static int
 dispatch_perform_redirects (struct sh_command c)
 {
   size_t i;
@@ -32,6 +32,8 @@ dispatch_perform_redirects (struct sh_command c)
        *    - überschüssige File Deskriptoren schließen
        */
     }
+
+  return 0;
 }
 
 static int
@@ -45,8 +47,9 @@ dispatch_builtin_unforked (builtin_func_t builtin, struct sh_command c)
   dup2(0, 10);
   dup2(1, 11);
 
-  dispatch_perform_redirects(c);
-  int res = builtin(c.nwords, c.words);
+  int res = dispatch_perform_redirects(c);
+  if (res != 0)
+    res = builtin(c.nwords, c.words);
 
   dup2(10, 0);
   dup2(11, 1);
@@ -74,13 +77,13 @@ dispatch_builtin_or_exec (struct sh_command c)
   exit(2);
 }
 
-static int
+static void
 dispatch_pipe_fork (struct sh_pipe p)
 {
   struct sh_command c = p.commands[p.ncommands - 1];
   p.ncommands--;
 
-  dispatch_perform_redirects(c);
+  int res = dispatch_perform_redirects(c);
 
   /* Solange in der Pipeline weitere Prozesse folgen, erzeugen wir rekursiv mit
    * pipe() ein Paar File Deskriptoren, die wir mit dup() oder dup2() auf die
@@ -107,6 +110,9 @@ dispatch_pipe_fork (struct sh_pipe p)
       *       verbunden werden:  fd[0] --> 0
       */
     }
+
+  if (res != 0)
+    exit(res);
 
   dispatch_builtin_or_exec(c);
 }
